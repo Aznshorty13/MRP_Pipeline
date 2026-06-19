@@ -8,6 +8,7 @@ import pandas as pd
 from xlsxwriter.utility import xl_col_to_name
 
 from data.fixtures import CHAOS_PAYLOAD, CONSTRAINTS, INVENTORY
+from mrp.exports.output_paths import enterprise_sandbox_path, enterprise_test_fixture_path
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -594,8 +595,11 @@ def append_stacked_sop_fixture(workbook, skus, calendar_array, master_data):
             ws_fixture.write_formula(base_target_row + 11, month_idx + 2, f"={tgt_col}{base_target_row + 4} * {unit_cost}", money_fmt)
             ws_fixture.write_formula(base_target_row + 12, month_idx + 2, f"={tgt_col}{base_target_row + 12} - {tgt_col}{base_target_row + 11}", money_fmt)
 
-def generate_enterprise_test_fixture(skus, constraints, inventory, alpha_demand, beta_demand, mutated_constraints, calendar_array):
-    filename = "Enterprise_MRP_TEST_FIXTURE.xlsx"
+def generate_enterprise_test_fixture(
+    skus, constraints, inventory, alpha_demand, beta_demand, mutated_constraints, calendar_array,
+    filename=None,
+):
+    filename = filename or enterprise_test_fixture_path()
     print(f"\n🚀 Initializing CI/CD Pipeline: Building {filename}")
 
     if isinstance(calendar_array[0], str):
@@ -756,8 +760,11 @@ def run_semantic_shadow_test(filename, df_alpha, df_beta, skus, excel_dates):
         for log in failure_log:
             print("   ", log)
 
-def generate_enterprise_sandbox(constraints, inventory, demand, calendar_array, filename="Enterprise_MRP_Sandbox.xlsx"):
+def generate_enterprise_sandbox(
+    constraints, inventory, demand, calendar_array, filename=None,
+):
     """Build full enterprise Excel UI."""
+    filename = filename or enterprise_sandbox_path()
     skus = list(constraints.keys())
     if isinstance(calendar_array[0], str):
         cal = pd.date_range(start=calendar_array[0] + "-01", periods=24, freq="MS")

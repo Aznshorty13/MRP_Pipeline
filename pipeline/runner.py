@@ -17,6 +17,13 @@ from mrp.exports.csv_exports import (
     export_full_pedagogical_trace,
     generate_cadence_matrix,
 )
+from mrp.exports.output_paths import (
+    alpha_raw_horizon_path,
+    beta_cadence_path,
+    beta_trace_path,
+    cleanup_legacy_root_artifacts,
+    enterprise_test_fixture_path,
+)
 from mrp.exports.excel.executive import build_executive_workbook, export_variance_workbook
 from mrp.exports.excel.fixtures import (
     generate_enterprise_sandbox,
@@ -30,6 +37,7 @@ from mrp.exports.excel.shadow_ledgers import (
 )
 from mrp.simulation import execute_beta_run, execute_sku_simulation
 from mrp.state import apply_chaos_events, deep_copy_beta_state, extract_inherited_state
+from mrp.viz.dashboard_audit import export_delta_dashboard_audit, export_sku_dashboard_audit
 from mrp.viz.dashboards import generate_all_delta_dashboards, generate_all_sku_dashboards
 
 
@@ -85,6 +93,10 @@ def run_alpha(
     inventory = inventory or INVENTORY
     demand = demand or DEMAND
 
+    removed = cleanup_legacy_root_artifacts()
+    if removed:
+        print(f"Removed {len(removed)} legacy root artifact(s).")
+
     calendar_array = generate_calendar_horizon(start_date=start_date)
     print(f"✅ Data Generation Suite Initialized. Horizon anchored at: {calendar_array[0]}")
     print("Initializing Alpha Engine State Machine...")
@@ -103,8 +115,10 @@ def run_alpha(
     df_alpha_enriched = enrich_baseline_matrix(df_enterprise_matrix, constraints)
     print("✅ Baseline Matrix Enriched. Revenue at Risk calculated.")
 
+    export_sku_dashboard_audit("alpha", df_alpha_enriched, constraints)
+
     if export_csv:
-        df_enterprise_matrix.to_csv("Alpha_Raw_Horizon.csv", index=False)
+        df_enterprise_matrix.to_csv(alpha_raw_horizon_path(), index=False)
         export_exception_log(df_alpha_enriched)
         export_full_pedagogical_trace(df_alpha_enriched, constraints)
         generate_cadence_matrix(df_alpha_enriched, calendar_array)
@@ -156,12 +170,14 @@ def run_beta(
     df_beta_enriched = enrich_baseline_matrix(df_beta_raw, mutated_master)
     print("✅ Beta Run Complete. Day X Timeline Enriched and Costed.")
 
+    export_sku_dashboard_audit("beta", df_beta_enriched, mutated_master)
+
     if export_artifacts:
         export_full_pedagogical_trace(
-            df_beta_enriched, mutated_master, filename="Beta_All_SKUs_Trace.txt"
+            df_beta_enriched, mutated_master, filename=beta_trace_path()
         )
         generate_cadence_matrix(
-            df_beta_enriched, beta_calendar_array, filename="Beta_Purchasing_Cadence.csv"
+            df_beta_enriched, beta_calendar_array, filename=beta_cadence_path()
         )
 
     if generate_dashboards:
@@ -200,6 +216,10 @@ def run_delta(
     df_joined = execute_calendar_join(alpha.df_enriched, beta.df_enriched)
     df_executive_summary, df_detailed_exceptions = generate_executive_alerts(
         df_joined, constraints
+    )
+
+    export_delta_dashboard_audit(
+        alpha.df_enriched, beta.df_enriched, beta.mutated_master
     )
 
     if generate_dashboards:
@@ -258,7 +278,7 @@ def run_full(
 
     if run_semantic_test:
         run_semantic_shadow_test(
-            "Enterprise_MRP_TEST_FIXTURE.xlsx",
+            enterprise_test_fixture_path(),
             alpha.df_enriched,
             beta.df_enriched,
             list(CONSTRAINTS.keys()),

@@ -1,13 +1,19 @@
 """Alpha executive workbook export (deduped upgraded version with condensed alerts)."""
 
+from pathlib import Path
+
 import pandas as pd
 
 from mrp.enrichment import calculate_inventory_health
+from mrp.exports.output_paths import alpha_exec_report_path, executive_variance_report_path
 from mrp.viz.dashboards import dashboard_path
 
 
-def build_executive_workbook(df_enriched, capacity_alerts_list, filename="Alpha_Exec_Report.xlsx"):
+def build_executive_workbook(
+    df_enriched, capacity_alerts_list, filename: str | Path | None = None
+):
     """Compiles metrics, action plans, and raw matrices into an executive .xlsx file."""
+    filename = filename or alpha_exec_report_path()
     print(f"Generating Enterprise Excel Handoff: {filename}...")
 
     agg_capital_commitment = df_enriched["Capital_Required"].sum()
@@ -110,7 +116,7 @@ def export_variance_workbook(df_raw_baseline, df_exceptions, df_summary):
 
     print("Executing Blueprint 11.3: Compiling Executive Excel Workbook...")
     today_str = datetime.now().strftime("%Y-%m-%d_%H%M")
-    filename = f"Executive_Variance_Report_{today_str}.xlsx"
+    filename = executive_variance_report_path(today_str)
 
     if df_raw_baseline.empty:
         print("🚨 Error: No baseline data provided to export.")

@@ -41,16 +41,35 @@ By default, the pipeline generates matplotlib dashboard images under `output/das
 
 ```
 output/dashboards/
-├── alpha/   → SKU_001_dashboard.png … SKU_007_dashboard.png
-├── beta/    → SKU_001_dashboard.png … SKU_007_dashboard.png
-└── delta/   → SKU_001_dashboard.png … SKU_007_dashboard.png
+├── alpha/   → SKU_001_dashboard.png … SKU_007_dashboard.png, dashboard_audit.csv
+├── beta/    → SKU_001_dashboard.png … SKU_007_dashboard.png, dashboard_audit.csv
+└── delta/   → SKU_001_dashboard.png … SKU_007_dashboard.png, dashboard_audit.csv
 ```
 
 Each chart is a multi-panel view: inventory sawtooth, horizon status heatmap, and capital/risk curves (Alpha/Beta), or Alpha vs Beta variance (Delta).
 
+**Dashboard audit CSV** (`dashboard_audit.csv` in each phase folder) exports the exact data used to render the charts — one row per SKU and month (plus derived delta columns for the delta phase). It is written on every phase run, including with `--no-dashboards`, so you can validate chart inputs without reading PNG files.
+
 The Alpha executive workbook embeds `output/dashboards/alpha/SKU_003_dashboard.png` when that file exists.
 
-Implementation: [`mrp/viz/dashboards.py`](mrp/viz/dashboards.py), wired from [`pipeline/runner.py`](pipeline/runner.py).
+Implementation: [`mrp/viz/dashboards.py`](mrp/viz/dashboards.py), [`mrp/viz/dashboard_audit.py`](mrp/viz/dashboard_audit.py), wired from [`pipeline/runner.py`](pipeline/runner.py).
+
+## Phase exports
+
+CSV, trace, and executive workbook artifacts are written under `output/exports/`:
+
+```
+output/exports/
+├── alpha/   → Alpha_Raw_Horizon.csv, Alpha_Exec_Report.xlsx, …
+├── beta/    → Beta_All_SKUs_Trace.txt, Beta_Purchasing_Cadence.csv
+└── delta/   → Executive_Variance_Report_*.xlsx
+```
+
+Optional Excel sandbox and CI test fixture workbooks (`--fixtures`) are written to `output/fixtures/`.
+
+On each pipeline run, any legacy copies of these artifacts still sitting in the project root are removed automatically.
+
+Implementation: [`mrp/exports/output_paths.py`](mrp/exports/output_paths.py), [`mrp/exports/csv_exports.py`](mrp/exports/csv_exports.py), [`mrp/exports/excel/executive.py`](mrp/exports/excel/executive.py), [`mrp/exports/excel/fixtures.py`](mrp/exports/excel/fixtures.py).
 
 ## System of Record
 
@@ -102,6 +121,8 @@ Implementation: [`mrp/exports/system_of_record_paths.py`](mrp/exports/system_of_
 | [`mrp/enrichment.py`](mrp/enrichment.py) | Baseline enrichment and health metrics |
 | [`mrp/delta.py`](mrp/delta.py) | Calendar join and exception rollup |
 | [`mrp/viz/dashboards.py`](mrp/viz/dashboards.py) | Dashboard PNG generation |
+| [`mrp/viz/dashboard_audit.py`](mrp/viz/dashboard_audit.py) | Dashboard audit CSV export |
+| [`mrp/exports/output_paths.py`](mrp/exports/output_paths.py) | Phase export and fixture output paths |
 | [`mrp/exports/system_of_record_paths.py`](mrp/exports/system_of_record_paths.py) | System of Record output paths |
 | [`mrp/exports/google_sheets_export.py`](mrp/exports/google_sheets_export.py) | CSV tab export + optional Google Sheets upload |
 | [`pipeline/runner.py`](pipeline/runner.py) | `run_alpha()`, `run_beta()`, `run_delta()`, `run_full()` |

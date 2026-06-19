@@ -1,10 +1,19 @@
 """CSV export utilities."""
 
+from pathlib import Path
+
 import pandas as pd
 
+from mrp.exports.output_paths import (
+    alpha_cadence_path,
+    alpha_exception_log_path,
+    alpha_trace_path,
+)
 
-def export_exception_log(df_enriched, filename="Alpha_Exception_Log.csv"):
+
+def export_exception_log(df_enriched, filename: str | Path | None = None):
     """Filters for timing exceptions and saves them to a CSV."""
+    filename = filename or alpha_exception_log_path()
     print(f"Generating Exception Log: {filename}...")
     df_exceptions = df_enriched[df_enriched["Order_Type"] == "🚨 MAGIC FIX (Past Due)"]
     if df_exceptions.empty:
@@ -16,9 +25,13 @@ def export_exception_log(df_enriched, filename="Alpha_Exception_Log.csv"):
 
 
 def export_full_pedagogical_trace(
-    df_enriched, master_data, months_to_trace=24, filename="Alpha_All_SKUs_Trace.txt"
+    df_enriched,
+    master_data,
+    months_to_trace=24,
+    filename: str | Path | None = None,
 ):
     """Writes pedagogical audit trace for all SKUs."""
+    filename = filename or alpha_trace_path()
     print(f"Generating Complete Audit Trace: {filename}...")
     sku_list = df_enriched["SKU_ID"].unique()
 
@@ -61,8 +74,11 @@ def export_full_pedagogical_trace(
     print("✅ Master Trace written successfully.")
 
 
-def generate_cadence_matrix(df_enriched, calendar_array, filename="Alpha_Purchasing_Cadence.csv"):
+def generate_cadence_matrix(
+    df_enriched, calendar_array, filename: str | Path | None = None
+):
     """Pivots planned releases into a purchasing cadence matrix."""
+    filename = filename or alpha_cadence_path()
     print("Initializing Component: Purchasing Cadence Matrix...\n")
     df_cadence = (
         df_enriched.pivot_table(

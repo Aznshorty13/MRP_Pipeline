@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Patch
 
-DASHBOARD_ROOT = Path("output") / "dashboards"
+from mrp.viz.dashboard_audit import DASHBOARD_ROOT, STATUS_CODE_MAP
 
 
 def dashboard_dir(phase: str) -> Path:
@@ -57,13 +57,7 @@ def plot_sku_dashboard(sku_id, df_enriched, master_data, prefix="Alpha"):
     ax1.grid(True, linestyle=":", alpha=0.6)
 
     ax2 = axes[1]
-    status_map = {
-        "Stable": 0,
-        "Normal Execution": 1,
-        "⚠️ CAPACITY BREACH": 2,
-        "🚨 MAGIC FIX (Past Due)": 3,
-    }
-    df["Status_Code"] = df["Order_Type"].map(status_map)
+    df["Status_Code"] = df["Order_Type"].map(STATUS_CODE_MAP)
     heatmap_data = df["Status_Code"].values.reshape(1, 24)
     cmap = sns.color_palette(["#bdc3c7", "#2ecc71", "#f39c12", "#e74c3c"])
 

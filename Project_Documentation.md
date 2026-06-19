@@ -92,6 +92,83 @@ This project implements a **24-month Master Resource Planning (MRP) simulation**
 | **Beta** | Day X Reality | Rolling horizon + chaos mutations + recalculation |
 | **Delta** | Variance Engine | Compare Alpha vs Beta; roll up executive actions |
 
+```mermaid
+graph TD
+    %% Root Node
+    Start[Blueprint 1: Enterprise Data Generation<br/>fixtures.py — Rules & Day 0 Reality]
+
+    CLI[main.py → pipeline/runner.py<br/>Alpha → Beta → Delta Orchestration]
+
+    %% Shared JSON Payload
+    Payload{CHAOS_PAYLOAD JSON<br/>Shared Exogenous Shocks}
+
+    Start --> CLI
+    Start --> Payload
+
+    %% Route A: Python Backend (RAM) — canonical sequential spine
+    subgraph RouteA_RAM ["Route A: Canonical Python Engine (RAM)"]
+        RouteA[Phase I — Alpha<br/>BP 2–4.3: State Machine, Enrichment & Exports]
+        RouteA --> AlphaSOR[(BP 17: Alpha SOR<br/>Dead-Cell Shadow Ledger)]
+        RouteA --> AlphaAudit[(Dashboard Audit CSV<br/>output/dashboards/alpha)]
+        RouteA --> BetaInherit[Blueprint 5: State Inheritance<br/>& Rolling Horizon Tick]
+        BetaInherit --> BetaA[Blueprint 6–7: Chaos Injector<br/>& Beta Recalculation Engine]
+        BetaA --> BetaSOR[(BP 18: Beta SOR<br/>Chaos Router Formatting)]
+        BetaA --> BetaAudit[(Dashboard Audit CSV<br/>output/dashboards/beta)]
+        BetaA --> DeltaA[Blueprint 8–9: Calendar Join<br/>& Executive Rollup]
+        DeltaA --> DeltaPresent[Blueprint 10.x: Variance Dashboards<br/>AI Payload & Executive Workbooks]
+        DeltaPresent --> DeltaSOR[(BP 19: Delta SOR<br/>Shadow Ledger)]
+        DeltaPresent --> DeltaAudit[(Dashboard Audit CSV<br/>output/dashboards/delta)]
+        DeltaPresent --> RAMVectors[(In-Memory AlphaResult & BetaResult<br/>Enriched DataFrames)]
+    end
+
+    CLI --> RouteA
+
+    %% Route B: Optional Excel track — forked after RAM pipeline
+    subgraph RouteB_UI ["Route B: Pure Excel Sandbox (Optional —fixtures)"]
+        FixturesGate{--fixtures flag}
+        RouteB[Blueprint 12–16: Formula Compiler<br/>Enterprise_MRP_Sandbox.xlsx]
+        BetaB[Blueprint 13: Beta Reality Tab<br/>Additive Chaos via Integer Override]
+        DeltaB[Blueprint 14–16 + 20: Delta Engine<br/>S&OP Test Fixture Grid]
+        OutputB[(Enterprise_MRP_TEST_FIXTURE.xlsx<br/>Evaluated Formula Workbook)]
+        FixturesGate --> RouteB
+        FixturesGate --> OutputB
+        RouteB --> BetaB
+        BetaB --> DeltaB
+        DeltaB --> OutputB
+    end
+
+    DeltaSOR --> FixturesGate
+
+    %% Injecting the Payload into both Beta nodes
+    Payload -->|<span style="color:#000000; background-color:#ffffff; padding:4px 6px; border-radius:4px; font-weight:bold; border: 1px solid #000000;">Read & Mutate RAM</span>| BetaA
+    Payload -->|<span style="color:#000000; background-color:#ffffff; padding:4px 6px; border-radius:4px; font-weight:bold; border: 1px solid #000000;">Read & Overwrite UI</span>| BetaB
+
+    %% Convergence: Phase 7 CI/CD Test
+    RAMVectors --> Auditor[Phase 7: Semantic Auditor<br/>Blueprint 20 —semantic-test]
+    OutputB --> Auditor
+
+    AlphaAudit --> PytestCI[pytest: Dashboard Audit & Smoke<br/>Local CI Validation]
+    BetaAudit --> PytestCI
+    DeltaAudit --> PytestCI
+
+    Auditor --> Final[RAM-to-Excel Isomorphism Test<br/>Mathematical Pass/Fail Validation]
+
+    %% Styling with lighter pastel backgrounds and forced black text
+    classDef python fill:#D6EAF8,stroke:#2E86C1,stroke-width:2px,color:#000000;
+    classDef excel fill:#D5F5E3,stroke:#28B463,stroke-width:2px,color:#000000;
+    classDef test fill:#FDEBD0,stroke:#D68910,stroke-width:2px,color:#000000;
+    classDef root fill:#E5E7E9,stroke:#5D6D7E,stroke-width:2px,color:#000000;
+    classDef payload fill:#EAEDED,stroke:#839192,stroke-width:2px,color:#000000;
+
+    class Start,CLI root;
+    class RouteA,BetaInherit,BetaA,DeltaA,DeltaPresent,AlphaSOR,BetaSOR,DeltaSOR,RAMVectors,AlphaAudit,BetaAudit,DeltaAudit python;
+    class FixturesGate,RouteB,BetaB,DeltaB,OutputB excel;
+    class Auditor,Final,PytestCI test;
+    class Payload payload;
+```
+
+> **CLI:** `py -X utf8 main.py --phase full` runs Route A. Add `--fixtures` for Route B; add `--semantic-test` (requires fixtures) for Phase 7. Excel formulas must be evaluated (open workbook in Excel and save) before the semantic audit.
+
 The refactored codebase preserves the original **Blueprint** numbering and business logic from the Colab notebook, but organizes each blueprint into importable Python modules with explicit orchestration via the CLI.
 
 ---
@@ -471,31 +548,35 @@ Translates raw arrays into business intelligence.
 
 ## **Output Artifacts Reference** {#output-artifacts-reference}
 
-Artifacts are written to the **current working directory** unless noted. Dashboard PNGs and System of Record files use `output/`.
+Artifacts are written under **`output/`** (exports, dashboards, system of record, and fixtures).
 
 | Artifact | Phase | Producer |
 |----------|-------|----------|
-| `Alpha_Raw_Horizon.csv` | Alpha | `run_alpha` |
-| `Alpha_Exception_Log.csv` | Alpha | `export_exception_log` |
-| `Alpha_All_SKUs_Trace.txt` | Alpha | `export_full_pedagogical_trace` |
-| `Alpha_Purchasing_Cadence.csv` | Alpha | `generate_cadence_matrix` |
-| `Alpha_Exec_Report.xlsx` | Alpha | `build_executive_workbook` |
+| `output/exports/alpha/Alpha_Raw_Horizon.csv` | Alpha | `run_alpha` |
+| `output/exports/alpha/Alpha_Exception_Log.csv` | Alpha | `export_exception_log` |
+| `output/exports/alpha/Alpha_All_SKUs_Trace.txt` | Alpha | `export_full_pedagogical_trace` |
+| `output/exports/alpha/Alpha_Purchasing_Cadence.csv` | Alpha | `generate_cadence_matrix` |
+| `output/exports/alpha/Alpha_Exec_Report.xlsx` | Alpha | `build_executive_workbook` |
 | `output/system_of_record/alpha/System_of_Record_Alpha.xlsx` | Alpha | `build_alpha_shadow_ledger` |
 | `output/system_of_record/alpha/google_sheets/*.csv` | Alpha | `export_sor_csv_tabs` |
 | `output/system_of_record/alpha/google_sheets_manifest.json` | Alpha | `upload_sor_to_google_sheets` (optional) |
+| `output/dashboards/alpha/dashboard_audit.csv` | Alpha | `export_sku_dashboard_audit` |
 | `output/dashboards/alpha/*.png` | Alpha | `generate_all_sku_dashboards` |
-| `Beta_*` (trace, cadence) | Beta | `run_beta` |
+| `output/exports/beta/Beta_All_SKUs_Trace.txt` | Beta | `run_beta` |
+| `output/exports/beta/Beta_Purchasing_Cadence.csv` | Beta | `run_beta` |
 | `output/system_of_record/beta/System_of_Record_Beta.xlsx` | Beta | `build_beta_shadow_ledger` |
 | `output/system_of_record/beta/google_sheets/*.csv` | Beta | `export_sor_csv_tabs` |
 | `output/system_of_record/beta/google_sheets_manifest.json` | Beta | `upload_sor_to_google_sheets` (optional) |
+| `output/dashboards/beta/dashboard_audit.csv` | Beta | `export_sku_dashboard_audit` |
 | `output/dashboards/beta/*.png` | Beta | `generate_all_sku_dashboards(prefix="Beta")` |
-| `Executive_Variance_Report_*.xlsx` | Delta | `export_variance_workbook` |
+| `output/exports/delta/Executive_Variance_Report_*.xlsx` | Delta | `export_variance_workbook` |
 | `output/system_of_record/delta/System_of_Record_Delta.xlsx` | Delta | `build_delta_shadow_ledger` |
 | `output/system_of_record/delta/google_sheets/*.csv` | Delta | `export_sor_csv_tabs` |
 | `output/system_of_record/delta/google_sheets_manifest.json` | Delta | `upload_sor_to_google_sheets` (optional) |
+| `output/dashboards/delta/dashboard_audit.csv` | Delta | `export_delta_dashboard_audit` |
 | `output/dashboards/delta/*.png` | Delta | `generate_all_delta_dashboards` |
-| `Enterprise_MRP_Sandbox.xlsx` | Fixtures | `--fixtures` |
-| `Enterprise_MRP_TEST_FIXTURE.xlsx` | Fixtures | `--fixtures` |
+| `output/fixtures/Enterprise_MRP_Sandbox.xlsx` | Fixtures | `--fixtures` |
+| `output/fixtures/Enterprise_MRP_TEST_FIXTURE.xlsx` | Fixtures | `--fixtures` |
 
 ---
 
@@ -564,6 +645,8 @@ The original project was developed in Google Colab as a top-to-bottom notebook (
 | Entry point | Run all cells | `py -X utf8 main.py --phase full` |
 | Structure | Single 3,300-line file | Modules under `mrp/`, `data/`, `pipeline/` |
 | Dashboard PNGs | Project root | `output/dashboards/{alpha,beta,delta}/` |
+| Phase CSV/TXT/XLSX exports | Project root | `output/exports/{alpha,beta,delta}/` |
+| Excel fixtures | Project root | `output/fixtures/` |
 | Duplicates | Multiple blueprint redefinitions | One function per blueprint |
 | Legacy reference | N/A | [`legacy/`](legacy/) folder |
 
