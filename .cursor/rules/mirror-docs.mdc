@@ -1,0 +1,43 @@
+---
+description: Cross-repo mirror doc rules — edit canonical in Notes when PE docs exist
+alwaysApply: true
+---
+
+# Mirror docs (mrp_pipeline)
+
+This repo is part of a multi-root workspace with the **Notes** knowledge base.
+When MRP platform-engineering notes are authored, they will mirror into
+`docs/platform-engineering/` here — same pattern as covenant_pipeline.
+
+## Current state
+
+- MRP PE notes are not yet authored (`Notes/projects/mrp/` is a placeholder).
+- Mirror group is registered in `Notes/registry.yaml` with `pairs: []`.
+- Application doc: `Project_Documentation.md` (project-canonical).
+
+## Where to edit (now)
+
+| Content | Edit in |
+|---------|---------|
+| Application architecture | This repo: `Project_Documentation.md` |
+| Layer 0-1 strategy (when added) | **Notes** `projects/mrp/` |
+| Reusable meta/math theory | **Notes** `meta/`, `math/` |
+
+## When PE notes are added
+
+Follow MRP onboarding in the `notes-cross-repo-sync` skill:
+
+1. Author canonical files in `Notes/projects/mrp/`
+2. Add mirror pairs to `registry.yaml`
+3. Run `python scripts/sync_pe_docs.py --write` from Notes
+4. Commit mirrors here; add CI mirror-check (copy covenant pattern)
+
+## Never edit mirror files directly
+
+Mirrors carry a `MIRROR:` banner and are regenerated from Notes.
+
+## Related
+
+- Notes index: `../Notes/projects/mrp/README.md`
+- Notes manifest: `../Notes/registry.yaml`
+- Companion skill: `notes-cross-repo-sync`
