@@ -40,4 +40,5 @@ Mirrors carry a `MIRROR:` banner and are regenerated from Notes.
 
 - Notes index: `../Notes/projects/mrp/README.md`
 - Notes manifest: `../Notes/registry.yaml`
+- Workflow skills: `../Notes/.cursor/skills/` (canonical in Notes)
 - Companion skill: `notes-cross-repo-sync`
